@@ -300,6 +300,36 @@ namespace SmartHdrManager
         [STAThread]
         private static void Main(string[] args)
         {
+            if (args.Length == 3 && args[0] == "--set-hdr") {
+                using var manualMutex = new Mutex(true, @"Local\SmartHdrManager.SingleInstance", out bool available);
+                if (!available || !bool.TryParse(args[2], out bool value)) { Environment.ExitCode = 2; return; }
+                Environment.ExitCode = HdrController.SetVerified(args[1], value) ? 0 : 1; return;
+            }
+            if (args.Length == 3 && args[0] == "--hardware-smoke") {
+                using var testMutex = new Mutex(true, @"Local\SmartHdrManager.SingleInstance", out bool available);
+                if (!available) throw new InvalidOperationException("Exit HDR Manager before the explicit hardware smoke test.");
+                HardwareSmoke.Run(args[1], args[2]); return;
+            }
+            if (args.Length == 2 && args[0] == "--inspect") {
+                SafeGamesContext.Atomic(args[1], HdrController.Inspect()); return;
+            }
+            if (args.Length == 2 && args[0] == "--scan-manifests") {
+                SafeGamesContext.Atomic(args[1], GameLibraryScanner.Scan(null)); return;
+            }
+            if (!args.Contains("--legacy-engine")) {
+                using var safeMutex = new Mutex(true, @"Local\SmartHdrManager.SingleInstance", out bool first);
+                // An exit request with no owner must not poison the next startup.
+                if (first && args.Contains("--exit")) return;
+                if (args.Length == 2 && args[0] == "--launch") SafeGamesContext.Queue(args[1]);
+                if (args.Length == 1 && args[0] is "--exit" or "--pause" or "--resume" or "--show" or "--recover" or "--hdr" or "--sdr" or "--auto") SafeGamesContext.Queue(args[0]);
+                if (!first) { if (args.Length == 0) SafeGamesContext.Queue("--show"); return; }
+                if (args.Contains("--exit")) return;
+                Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                using var safe = new SafeGamesContext(args.Contains("--tray") || args.Contains("--launch"));
+                Application.Run(safe); return;
+            }
             var command = CommandEvents.Parse(args);
             // A command-line action never opens the window: the app (re)starts quietly in the tray
             bool startHidden = command != CliCommand.None || args.Any(a => a.Equals("--tray", StringComparison.OrdinalIgnoreCase));

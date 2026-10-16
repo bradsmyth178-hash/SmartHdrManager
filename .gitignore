@@ -20,3 +20,12 @@ log.txt
 .vscode/
 *.user
 *.suo
+
+games.json
+status.json
+recovery.json
+requests/
+created-shortcuts.json
+excluded-folders.json
+publish-safe/
+*.tmp

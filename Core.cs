@@ -482,7 +482,7 @@ namespace SmartHdrManager
     // =========================================================================
     // 4. WINDOWS DISPLAYCONFIG API (native HDR control + Primary Monitor Filter)
     // =========================================================================
-    public static class HdrController
+    public static partial class HdrController
     {
         private const int QDC_ONLY_ACTIVE_PATHS = 0x00000002;
         private const int ERROR_SUCCESS = 0;
@@ -675,19 +675,14 @@ namespace SmartHdrManager
         }
 
         /// <summary>
-        /// Decides which active display paths are switched. With a monitor selection: the selected ones; if none of the
-        /// selected monitors is connected right now, it falls back to "primary only" / "all" instead of switching nothing.
+        /// Decides which active display paths are switched. Explicit selections are strict; if none of the
+        /// selected monitors is connected right now, nothing is selected.
         /// </summary>
         private static Func<DISPLAYCONFIG_PATH_INFO, bool> BuildMatcher(DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes, MonitorFilter filter)
         {
             if (filter.DevicePaths != null)
             {
-                var keys = paths.Select(MonitorKey).ToArray();
-                if (keys.Any(filter.DevicePaths.Contains))
-                {
-                    var selected = new HashSet<string>(keys.Where(filter.DevicePaths.Contains), StringComparer.OrdinalIgnoreCase);
-                    return p => selected.Contains(MonitorKey(p));
-                }
+                return p => filter.DevicePaths.Contains(MonitorKey(p));
             }
             return p => !filter.OnlyPrimary || IsPrimaryDisplayPath(p, modes);
         }
@@ -1104,8 +1099,9 @@ namespace SmartHdrManager
                 if (!matches(path))
                     continue;
 
-                if (TryGetHdrState(path.targetInfo.adapterId, path.targetInfo.id, out bool isHdrSupported, out bool isHdrEnabled) &&
-                    isHdrSupported)
+                if (!TryGetHdrState(path.targetInfo.adapterId, path.targetInfo.id, out bool isHdrSupported, out bool isHdrEnabled))
+                    return false;
+                if (isHdrSupported)
                 {
                     supported++;
                     if (isHdrEnabled) enabled++;
@@ -1114,7 +1110,7 @@ namespace SmartHdrManager
 
             anyEnabled = enabled > 0;
             allEnabled = supported > 0 && enabled == supported;
-            return true;
+            return supported > 0;
         }
     }
 

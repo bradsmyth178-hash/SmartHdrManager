@@ -1,3 +1,7 @@
+# Safe games fork
+
+This branch defaults to per-display game automation. See [safe-mode setup and limitations](SAFE-GAMES.md) and the [upstream audit](AUDIT.md). The original documentation below describes the legacy engine, not the default configuration.
+
 # Smart HDR Manager
 
 Turns Windows HDR on automatically when you need it – HDR games, HDR videos on YouTube, local HDR movies and (optionally) SDR videos with NVIDIA RTX Video HDR – and back to SDR when you are done. It lives in the system tray.

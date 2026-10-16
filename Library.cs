@@ -58,7 +58,6 @@ namespace SmartHdrManager
 
             // One entry per id, games without a detectable executable are dropped
             return games
-                .Where(g => g.Processes.Count > 0)
                 .GroupBy(g => g.Id, StringComparer.OrdinalIgnoreCase)
                 .Select(g => g.First())
                 .OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase)

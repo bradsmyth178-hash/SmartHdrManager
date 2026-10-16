@@ -31,4 +31,8 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+    <None Include="Discover-Games.ps1" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
